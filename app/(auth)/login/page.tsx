@@ -1,16 +1,41 @@
 "use client";
+import { loginUser } from "@/services/auth";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { toast } from "react-toastify";
 
 export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
   const [password, setPassword] = useState("");
+  const router = useRouter();
+  const queryClient = useQueryClient();
 
-  const handleSubmit = () => {
-    // Handle sign in
-    console.log("Sign in with:", { email, password });
+  const mutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: (data) => {
+      localStorage.setItem("user", JSON.stringify(data.user));
+      queryClient.setQueryData(["me"], data.user);
+      console.log("logindata: ", data);
+      toast.success("Login successfull");
+      router.push("/dashboard");
+    },
+
+    onError: (error) => {
+      const err = error as AxiosError<any>;
+      console.error(err.response?.data?.message);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutation.mutate(form);
   };
-
   return (
     <div className="bg-gray-50 dark:bg-[#181b20] font-sans min-h-screen flex flex-col">
       <div className="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden">
@@ -98,8 +123,10 @@ export default function SignInPage() {
                       className="flex w-full rounded-lg text-[#121717] dark:text-white focus:outline-0 focus:ring-2 focus:ring-[#1d6d6b]/20 border border-[#dde4e4] dark:border-gray-700 bg-white dark:bg-[#2a2f36] focus:border-[#1d6d6b] h-14 placeholder:text-[#678383] p-[15px] text-base font-normal leading-normal"
                       placeholder="name@company.com"
                       type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      value={form.email}
+                      onChange={(e) =>
+                        setForm({ ...form, email: e.target.value })
+                      }
                     />
                   </label>
                 </div>
@@ -123,11 +150,13 @@ export default function SignInPage() {
                         className="flex w-full min-w-0 flex-1 rounded-lg text-[#121717] dark:text-white focus:outline-0 focus:ring-2 focus:ring-[#1d6d6b]/20 border border-[#dde4e4] dark:border-gray-700 bg-white dark:bg-[#2a2f36] focus:border-[#1d6d6b] h-14 placeholder:text-[#678383] p-[15px] rounded-r-none border-r-0 pr-2 text-base font-normal leading-normal"
                         placeholder="••••••••"
                         type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        value={form.password}
+                        onChange={(e) =>
+                          setForm({ ...form, password: e.target.value })
+                        }
                       />
                       <div
-                        className="text-[#678383] flex border border-[#dde4e4] dark:border-gray-700 bg-white dark:bg-[#2a2f36] items-center justify-center pr-[15px] rounded-r-lg border-l-0 cursor-pointer"
+                        className="text-[#678383] flex border border-[#dde4e4] dark:border-gray-700 bg-white dark:bg-[#2a2f36] items-center justify-center pr-3.75 rounded-r-lg border-l-0 cursor-pointer"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         <svg

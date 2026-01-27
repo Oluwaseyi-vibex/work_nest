@@ -1,13 +1,41 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import { useState } from "react";
+import { registerUser } from "@/services/auth";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = () => {
-    // Handle form submission
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+
+  const mutation = useMutation({
+    mutationFn: registerUser,
+    onSuccess: (data) => {
+      console.log("Registration successful:", data);
+      // redirect, show toast, etc.
+      toast.success("Registration successful!");
+      router.push("/login");
+    },
+    onError: (error) => {
+      const err = error as AxiosError<any>;
+      console.error("❌ Registration failed:", err.response?.data);
+      toast.error("❌ Registration failed:", err.response?.data);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutation.mutate(form);
   };
 
   return (
@@ -133,14 +161,18 @@ export default function RegisterPage() {
                       className="w-full pl-11 pr-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-[#121717] dark:text-white focus:ring-2 focus:ring-[#1d6d6b]/20 focus:border-[#1d6d6b] outline-none transition-all placeholder:text-gray-400"
                       placeholder="e.g. Alex Rivera"
                       type="text"
+                      value={form.name}
+                      onChange={(e) =>
+                        setForm({ ...form, name: e.target.value })
+                      }
                     />
                   </div>
                 </div>
 
-                {/* Work Email */}
+                {/*  Email */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[#121717] dark:text-white text-sm font-semibold">
-                    Work Email
+                    Email
                   </label>
                   <div className="relative">
                     <svg
@@ -152,14 +184,18 @@ export default function RegisterPage() {
                     </svg>
                     <input
                       className="w-full pl-11 pr-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-[#121717] dark:text-white focus:ring-2 focus:ring-[#1d6d6b]/20 focus:border-[#1d6d6b] outline-none transition-all placeholder:text-gray-400"
-                      placeholder="name@company.com"
+                      placeholder="name@gmail.com"
                       type="email"
+                      value={form.email}
+                      onChange={(e) =>
+                        setForm({ ...form, email: e.target.value })
+                      }
                     />
                   </div>
                 </div>
 
                 {/* Workspace Name */}
-                <div className="flex flex-col gap-1.5">
+                {/* <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-[#121717] dark:text-white text-sm font-semibold">
                       Workspace Name
@@ -196,7 +232,7 @@ export default function RegisterPage() {
                       .io
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Password */}
                 <div className="flex flex-col gap-1.5">
@@ -215,6 +251,10 @@ export default function RegisterPage() {
                       className="w-full pl-11 pr-12 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-[#121717] dark:text-white focus:ring-2 focus:ring-[#1d6d6b]/20 focus:border-[#1d6d6b] outline-none transition-all placeholder:text-gray-400"
                       placeholder="••••••••"
                       type={showPassword ? "text" : "password"}
+                      value={form.password}
+                      onChange={(e) =>
+                        setForm({ ...form, password: e.target.value })
+                      }
                     />
                     <button
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#1d6d6b] transition-colors"
