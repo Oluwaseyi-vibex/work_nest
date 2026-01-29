@@ -1,5 +1,5 @@
 import axiosInstance from "@/lib/axiosInstance";
-import {  useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 
 // REGISTER
@@ -35,5 +35,3 @@ export const useMe = () =>
     },
     staleTime: Infinity,
   });
-
-
