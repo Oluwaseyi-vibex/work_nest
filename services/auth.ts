@@ -1,5 +1,5 @@
 import axiosInstance from "@/lib/axiosInstance";
-import {  useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 
 // REGISTER
@@ -21,8 +21,8 @@ export interface LoginPayload {
 }
 
 export const loginUser = async (payload: LoginPayload) => {
-  const { data } = await axiosInstance.post("/auth/login", payload);
-  return data;
+  const response = await axiosInstance.post("/auth/login", payload);
+  return response.data;
 };
 
 export const useMe = () =>
@@ -35,5 +35,3 @@ export const useMe = () =>
     },
     staleTime: Infinity,
   });
-
-

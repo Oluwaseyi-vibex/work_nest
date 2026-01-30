@@ -15,7 +15,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${manrope.className} antialiased`}>
+      <body
+        className={`${manrope.className} antialiased`}
+        cz-shortcut-listen="true"
+      >
         <Providers>{children}</Providers>
       </body>
     </html>

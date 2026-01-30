@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Bounce, ToastContainer } from "react-toastify";
+import { env } from "@/lib/env";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -14,7 +15,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      {process.env.NODE_ENV === "development" && (
+      {env.NODE_ENV === "development" && (
         <ReactQueryDevtools initialIsOpen={false} />
       )}
       <ToastContainer

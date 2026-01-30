@@ -1,8 +1,18 @@
 @import "tailwindcss";
+@plugin "daisyui";
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
+}
+
+@theme {
+  --color-landing-page-primary: #0df293;
+  --color-landing-page-background-light: #f5f8f7;
+  --color-landing-page-background-dark: #10221b;
+  --color-primary2: #1d6d6b !important;
+  --color-background-light: #f5f7f9;
+  --color-background-dark: #181b20;
 }
 
 @theme inline {
@@ -22,5 +32,41 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* font-family: Arial, Helvetica, sans-serif; */
+}
+
+.geometric-bg {
+  background-image: radial-gradient(#0df293 0.5px, transparent 0.5px);
+  background-size: 24px 24px;
+  opacity: 0.1;
+}
+.material-symbols-outlined {
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+}
+.soft-green-gradient {
+  background: linear-gradient(
+    135deg,
+    rgba(19, 236, 91, 0.1) 0%,
+    rgba(255, 255, 255, 1) 100%
+  );
+}
+
+.active-nav {
+  background-color: #f1f4f4;
+  border-right: 3px solid #1d6d6b;
+}
+.avatar-stack > div {
+  margin-left: -8px;
+  border: 2px solid white;
+}
+.avatar-stack > div:first-child {
+  margin-left: 0;
+}
+
+* {
+  /* border: 0.5px solid red !important; */
 }

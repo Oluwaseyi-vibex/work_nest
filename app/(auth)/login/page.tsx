@@ -5,15 +5,20 @@ import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
+import { useForm } from "react-hook-form";
+import { useAuthStore } from "@/store/useAuthStore";
+import { LoginFormInput } from "@/types";
 
 export default function SignInPage() {
+  const {
+    handleSubmit,
+    register,
+    formState: { errors },
+  } = useForm<LoginFormInput>();
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
-  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const setUser = useAuthStore((state) => state.setUser);
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -32,9 +37,17 @@ export default function SignInPage() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    mutation.mutate(form);
+  const handleSubmitHandler = async (data: LoginFormInput) => {
+    setLoading(true);
+    try {
+      const res = await loginUser(data);
+      setUser(res.data);
+      router.push("/dashboard");
+    } catch (error) {
+      console.log(error || "Login failed");
+    } finally {
+      setLoading(false);
+    }
   };
   return (
     <div className="bg-gray-50 dark:bg-[#181b20] font-sans min-h-screen flex flex-col">
@@ -112,7 +125,7 @@ export default function SignInPage() {
               </div>
 
               {/* Login Form */}
-              <div className="flex flex-col gap-5">
+              <form className="flex flex-col gap-5">
                 <div className="flex flex-col gap-2">
                   <label className="flex flex-col w-full">
                     <p className="text-[#121717] dark:text-white text-sm font-bold leading-normal pb-2">
@@ -123,11 +136,13 @@ export default function SignInPage() {
                       className="flex w-full rounded-lg text-[#121717] dark:text-white focus:outline-0 focus:ring-2 focus:ring-[#1d6d6b]/20 border border-[#dde4e4] dark:border-gray-700 bg-white dark:bg-[#2a2f36] focus:border-[#1d6d6b] h-14 placeholder:text-[#678383] p-[15px] text-base font-normal leading-normal"
                       placeholder="name@company.com"
                       type="email"
-                      value={form.email}
-                      onChange={(e) =>
-                        setForm({ ...form, email: e.target.value })
-                      }
+                      {...register("email", { required: "Email is required" })}
                     />
+                    {errors.email && (
+                      <p className="text-xs text-red-500">
+                        {errors.email.message as string}
+                      </p>
+                    )}
                   </label>
                 </div>
 
@@ -150,11 +165,15 @@ export default function SignInPage() {
                         className="flex w-full min-w-0 flex-1 rounded-lg text-[#121717] dark:text-white focus:outline-0 focus:ring-2 focus:ring-[#1d6d6b]/20 border border-[#dde4e4] dark:border-gray-700 bg-white dark:bg-[#2a2f36] focus:border-[#1d6d6b] h-14 placeholder:text-[#678383] p-[15px] rounded-r-none border-r-0 pr-2 text-base font-normal leading-normal"
                         placeholder="••••••••"
                         type={showPassword ? "text" : "password"}
-                        value={form.password}
-                        onChange={(e) =>
-                          setForm({ ...form, password: e.target.value })
-                        }
+                        {...register("password", {
+                          required: "Password is required",
+                        })}
                       />
+                      {errors.password && (
+                        <p className="text-xs text-red-500">
+                          {errors.password.message as string}
+                        </p>
+                      )}
                       <div
                         className="text-[#678383] flex border border-[#dde4e4] dark:border-gray-700 bg-white dark:bg-[#2a2f36] items-center justify-center pr-3.75 rounded-r-lg border-l-0 cursor-pointer"
                         onClick={() => setShowPassword(!showPassword)}
@@ -177,12 +196,18 @@ export default function SignInPage() {
 
                 {/* Primary CTA */}
                 <button
+                  type="submit"
                   className="mt-4 flex w-full cursor-pointer items-center justify-center rounded-lg h-14 px-4 bg-[#1d6d6b] text-white text-base font-bold leading-normal tracking-[0.015em] hover:brightness-110 active:scale-[0.98] transition-all"
-                  onClick={handleSubmit}
+                  onClick={handleSubmit(handleSubmitHandler)}
+                  disabled={loading}
                 >
-                  <span className="truncate">Sign In</span>
+                  {loading ? (
+                    <span className="loading loading-dots loading-xl"></span>
+                  ) : (
+                    <span className="truncate">Sign In</span>
+                  )}
                 </button>
-              </div>
+              </form>
 
               {/* Footer Link */}
               <div className="mt-8 text-center">
