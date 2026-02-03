@@ -1,4 +1,4 @@
-import { useUser } from "@/lib/hooks/useUser";
+import { useUser } from "@/hooks/useUser";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";

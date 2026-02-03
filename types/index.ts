@@ -8,3 +8,23 @@ export interface RegisterFormInput {
   email: string;
   password: string;
 }
+
+export interface ProjectsType {
+  project: {
+    id: string;
+    name: string;
+    ownerId: string;
+    description: string;
+    createdAt: string;
+  };
+}
+
+export interface TasksType {
+  assignedToId: string | null;
+  createdAt: string;
+  description: string | null;
+  id: string;
+  projectId: string;
+  status: string;
+  title: string;
+}
