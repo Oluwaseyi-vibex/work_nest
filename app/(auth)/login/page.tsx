@@ -28,8 +28,9 @@ export default function SignInPage() {
       localStorage.setItem("accessToken", res.data.token);
       document.cookie = `accessToken=${res.data.token}; path=/; max-age=3600; SameSite=Lax`;
       router.push("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.log(error || "Login failed");
+      toast.error(error.response?.data?.message || "Invalid email/password");
     } finally {
       setLoading(false);
     }

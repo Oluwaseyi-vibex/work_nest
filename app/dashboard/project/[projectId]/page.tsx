@@ -18,12 +18,22 @@ import {
   CircleUser,
   ChevronDown,
   Users,
+  UserPlus,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { toast } from "react-toastify";
+import Link from "next/link";
+import ProjectMembers from "@/components/project/ProjectMembers";
+import {
+  addProjectMembers,
+  fetchProjectMembers,
+} from "@/services/project.service";
+import AddProjectMemberModal from "@/components/project/AddProjectModal";
 
 export default function ProjectsPage() {
   const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showProjectMemberModal, setShowProjectMemberModal] = useState(true);
+  const [currentPath, setCurrentPath] = useState("tasks");
   const queryClient = useQueryClient();
   const params = useParams();
   const projectId = params.projectId as string;
@@ -32,12 +42,22 @@ export default function ProjectsPage() {
 
   const {
     data: todos,
-    isLoading,
-    isError,
+    isLoading: todosLoading,
+    isError: todosError,
   } = useQuery({
     queryKey: ["project-todos", projectId],
     queryFn: () => fetchMyProjectsTask(projectId),
     enabled: !!projectId,
+  });
+
+  const {
+    data: members,
+    isLoading: membersLoading,
+    isError: membersError,
+  } = useQuery({
+    queryKey: ["project-members", projectId],
+    queryFn: () => fetchProjectMembers(projectId),
+    enabled: !!projectId && currentPath === "members",
   });
 
   const mutation = useMutation({
@@ -48,6 +68,17 @@ export default function ProjectsPage() {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to create task");
+    },
+  });
+
+  const { mutate: membersMutation, isPending: addMemberLoading } = useMutation({
+    mutationFn: addProjectMembers,
+    onSuccess: () => {
+      setShowProjectMemberModal(false);
+      toast.success("Member added!");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to add member");
     },
   });
 
@@ -65,8 +96,11 @@ export default function ProjectsPage() {
   const addNewTaskHandler = (data: { title: string; description: string }) => {
     mutation.mutate({ ...data, projectId });
   };
+  const addMemberHandler = (data: { email: string }) => {
+    membersMutation({ userEmail: data.email, projectId });
+  };
 
-  return isLoading ? (
+  return todosLoading ? (
     <TaskSkeleton />
   ) : (
     <section className="bg-background-light dark:bg-background-dark font-display text-[#121717] dark:text-white transition-colors duration-200">
@@ -97,28 +131,41 @@ export default function ProjectsPage() {
                     </span>
                     <span>Filter</span>
                   </button>
-                  <button
-                    onClick={() => setShowTaskModal(true)}
-                    className="btn flex items-center px-4 h-10 rounded-lg bg-primary2 text-white text-sm font-bold shadow-md shadow-primary2/20 hover:brightness-110"
-                  >
-                    <span className="material-symbols-outlined text-[20px] mr-2">
-                      <Plus />
-                    </span>
-                    <span>New Task</span>
-                  </button>
+                  {currentPath === "tasks" && (
+                    <button
+                      onClick={() => setShowTaskModal(true)}
+                      className="btn flex items-center px-4 h-10 rounded-lg bg-primary2 text-white text-sm font-bold shadow-md shadow-primary2/20 hover:brightness-110"
+                    >
+                      <span className="material-symbols-outlined text-[20px] mr-2">
+                        <Plus />
+                      </span>
+                      <span>New Task</span>
+                    </button>
+                  )}
+                  {currentPath === "members" && (
+                    <button
+                      onClick={() => setShowProjectMemberModal(true)}
+                      className="btn flex items-center px-4 h-10 rounded-lg bg-primary2 text-white text-sm font-bold shadow-md shadow-primary2/20 hover:brightness-110"
+                    >
+                      <span className="material-symbols-outlined text-[20px] mr-2">
+                        <UserPlus />
+                      </span>
+                      <span>Add Member</span>
+                    </button>
+                  )}
                 </div>
               </div>
               {/* <!-- Tabs --> */}
               <div className="flex gap-8">
-                <a
-                  className="flex items-center justify-center border-b-2 border-primary2 text-primary2 pb-3 px-1 font-bold text-sm"
-                  href="#"
+                <button
+                  onClick={() => setCurrentPath("tasks")}
+                  className={` ${currentPath === "tasks" && "border-primary2 text-primary2 border-b-2"} flex cursor-pointer items-center justify-center pb-3 px-1 font-bold text-sm hover:text-primary2 text-[#678383] transition-colors`}
                 >
                   <span className="material-symbols-outlined text-[20px] mr-2">
                     <BadgeCheck />
                   </span>
                   Tasks
-                </a>
+                </button>
                 <a
                   className="flex items-center justify-center border-b-2 border-transparent text-[#678383] pb-3 px-1 font-bold text-sm hover:text-primary2 transition-colors"
                   href="#"
@@ -137,40 +184,41 @@ export default function ProjectsPage() {
                   </span>
                   Files
                 </a>
-                <a
-                  className="flex items-center justify-center border-b-2 border-transparent text-[#678383] pb-3 px-1 font-bold text-sm hover:text-primary2 transition-colors"
-                  href="#"
+                <button
+                  onClick={() => setCurrentPath("members")}
+                  className={` ${currentPath === "members" && "border-primary2 text-primary2 border-b-2"} flex cursor-pointer items-center justify-center pb-3 px-1 font-bold text-sm hover:text-primary2 text-[#678383] transition-colors`}
                 >
                   <span className="material-symbols-outlined text-[20px] mr-2">
                     <Users />
                   </span>
                   Members
-                </a>
+                </button>
               </div>
             </div>
             {/* <!-- Kanban Board Section --> */}
-            <div className="flex-1 p-8 overflow-x-auto custom-scrollbar flex gap-6 bg-background-light dark:bg-background-dark">
-              {/* <!-- Todo Column --> */}
-              <div className="kanban-column flex flex-col gap-4">
-                <div className="flex items-center justify-between px-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-black text-sm uppercase tracking-widest text-[#678383]">
-                      To Do
-                    </h3>
-                    <span className="bg-[#dde4e4] dark:bg-zinc-800 text-[#121717] dark:text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                      {todosData.length}
-                    </span>
+            {currentPath === "tasks" && (
+              <div className="flex-1 p-8  overflow-x-auto custom-scrollbar flex gap-6 bg-background-light dark:bg-background-dark">
+                {/* <!-- Todo Column --> */}
+                <div className="kanban-column flex flex-col gap-4">
+                  <div className="flex items-center justify-between px-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-black text-sm uppercase tracking-widest text-[#678383]">
+                        To Do
+                      </h3>
+                      <span className="bg-[#dde4e4] dark:bg-zinc-800 text-[#121717] dark:text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                        {todosData.length}
+                      </span>
+                    </div>
+                    <button className="material-symbols-outlined text-[#678383] hover:text-primary2">
+                      <CopyPlus />
+                    </button>
                   </div>
-                  <button className="material-symbols-outlined text-[#678383] hover:text-primary2">
-                    <CopyPlus />
-                  </button>
-                </div>
-                {/* <!-- Task Card 1 --> */}
-                {todosData?.map((task: TasksType) => (
-                  <TaskCard title={task.title} key={task.id} />
-                ))}
-                {/* <!-- Task Card 2 --> */}
-                {/* <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl border border-[#dde4e4] dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow group">
+                  {/* <!-- Task Card 1 --> */}
+                  {todosData?.map((task: TasksType) => (
+                    <TaskCard title={task.title} key={task.id} />
+                  ))}
+                  {/* <!-- Task Card 2 --> */}
+                  {/* <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl border border-[#dde4e4] dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow group">
                   <div className="flex justify-between items-start mb-3">
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 uppercase tracking-tight">
                       High
@@ -199,33 +247,33 @@ export default function ProjectsPage() {
                     ></div>
                   </div>
                 </div> */}
-                {/* <!-- Quick Add Task --> */}
-                {/* <button className="flex items-center justify-center p-4 border-2 border-dashed border-[#dde4e4] dark:border-zinc-800 rounded-xl text-[#678383] hover:border-primary2/40 hover:text-primary2 transition-all group">
+                  {/* <!-- Quick Add Task --> */}
+                  {/* <button className="flex items-center justify-center p-4 border-2 border-dashed border-[#dde4e4] dark:border-zinc-800 rounded-xl text-[#678383] hover:border-primary2/40 hover:text-primary2 transition-all group">
                   <span className="material-symbols-outlined mr-2">add</span>
                   <span className="text-sm font-bold">Add another card</span>
                 </button> */}
-              </div>
-              {/* <!-- In Progress Column --> */}
-              <div className="kanban-column flex flex-col gap-4">
-                <div className="flex items-center justify-between px-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-black text-sm uppercase tracking-widest text-[#678383]">
-                      In Progress
-                    </h3>
-                    <span className="bg-primary2/10 text-primary2 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                      {inProgressData?.length}
-                    </span>
-                  </div>
-                  <button className="material-symbols-outlined text-[#678383] hover:text-primary2">
-                    <CopyPlus />
-                  </button>
                 </div>
-                {/* <!-- Task Card 3 --> */}
-                {inProgressData?.map((task: TasksType) => (
-                  <TaskCard title={task.title} key={task.id} />
-                ))}
-                {/* <!-- Task Card 4 --> */}
-                {/* <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl border border-[#dde4e4] dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow group">
+                {/* <!-- In Progress Column --> */}
+                <div className="kanban-column flex flex-col gap-4">
+                  <div className="flex items-center justify-between px-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-black text-sm uppercase tracking-widest text-[#678383]">
+                        In Progress
+                      </h3>
+                      <span className="bg-primary2/10 text-primary2 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                        {inProgressData?.length}
+                      </span>
+                    </div>
+                    <button className="material-symbols-outlined text-[#678383] hover:text-primary2">
+                      <CopyPlus />
+                    </button>
+                  </div>
+                  {/* <!-- Task Card 3 --> */}
+                  {inProgressData?.map((task: TasksType) => (
+                    <TaskCard title={task.title} key={task.id} />
+                  ))}
+                  {/* <!-- Task Card 4 --> */}
+                  {/* <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl border border-[#dde4e4] dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow group">
                   <div className="flex justify-between items-start mb-3">
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 uppercase tracking-tight">
                       Medium
@@ -254,29 +302,29 @@ export default function ProjectsPage() {
                     ></div>
                   </div>
                 </div> */}
-              </div>
-              {/* <!-- Done Column --> */}
-              <div className="kanban-column flex flex-col gap-4">
-                <div className="flex items-center justify-between px-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-black text-sm uppercase tracking-widest text-[#678383]">
-                      Done
-                    </h3>
-                    <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                      {doneData.length}
-                    </span>
-                  </div>
-                  <button className="material-symbols-outlined text-[#678383] hover:text-primary2">
-                    <CopyPlus />
-                  </button>
                 </div>
-                {/* <!-- Task Card 5 --> */}
-                {doneData.map((task: TasksType) => (
-                  <TaskCard title={task.title} key={task.id} />
-                ))}
-              </div>
-              {/* <!-- Add New Column --> */}
-              {/* <div className="kanban-column flex flex-col gap-4">
+                {/* <!-- Done Column --> */}
+                <div className="kanban-column flex flex-col gap-4">
+                  <div className="flex items-center justify-between px-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-black text-sm uppercase tracking-widest text-[#678383]">
+                        Done
+                      </h3>
+                      <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                        {doneData.length}
+                      </span>
+                    </div>
+                    <button className="material-symbols-outlined text-[#678383] hover:text-primary2">
+                      <CopyPlus />
+                    </button>
+                  </div>
+                  {/* <!-- Task Card 5 --> */}
+                  {doneData.map((task: TasksType) => (
+                    <TaskCard title={task.title} key={task.id} />
+                  ))}
+                </div>
+                {/* <!-- Add New Column --> */}
+                {/* <div className="kanban-column flex flex-col gap-4">
                 <div className="flex items-center px-1 mb-2">
                   <h3 className="font-black text-sm uppercase tracking-widest text-[#678383] opacity-50">
                     Add Column
@@ -293,7 +341,14 @@ export default function ProjectsPage() {
                   </div>
                 </div>
               </div> */}
-            </div>
+              </div>
+            )}
+            {currentPath === "members" && (
+              <ProjectMembers
+                data={members?.data?.projectMembers}
+                isLoading={membersLoading}
+              />
+            )}
           </div>
         </main>
       </div>
@@ -301,6 +356,13 @@ export default function ProjectsPage() {
         show={showTaskModal}
         close={() => setShowTaskModal(false)}
         onSubmit={addNewTaskHandler}
+      />
+      <AddProjectMemberModal
+        projectName={todos.data.name}
+        show={showProjectMemberModal}
+        close={() => setShowProjectMemberModal(false)}
+        onSubmit={addMemberHandler}
+        isLoading={addMemberLoading}
       />
     </section>
   );
