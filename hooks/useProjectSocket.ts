@@ -11,6 +11,13 @@ export function useProjectSocket(projectId: string) {
 
   useEffect(() => {
     if (!projectId) return;
+    // socket.on("connect", () => {
+    //   console.log("✅ Socket Connected:", socket.id);
+    // });
+
+    // socket.on("disconnect", (reason) => {
+    //   console.log("❌ Socket Disconnected. Reason:", reason);
+    // });
 
     socket.emit("join_project", projectId);
 
@@ -23,7 +30,6 @@ export function useProjectSocket(projectId: string) {
       socket.off("task_created");
       socket.off("task_updated");
       socket.off("task_deleted");
-      socket.disconnect();
     };
   }, [projectId, queryClient]);
 }

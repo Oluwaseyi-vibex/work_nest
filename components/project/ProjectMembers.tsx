@@ -1,10 +1,16 @@
-import { EllipsisVertical, Mail } from "lucide-react";
+import {
+  ArrowLeftRight,
+  EllipsisVertical,
+  Mail,
+  Settings,
+  Trash2,
+} from "lucide-react";
 import React from "react";
 import Loader from "../Loader";
 import { formatDate } from "@/utils/formatData";
 import { useForm } from "react-hook-form";
 
-const ProjectMembers = ({ data, isLoading }: any) => {
+const ProjectMembers = ({ data, isLoading, onRemove, type }: any) => {
   return (
     <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col">
       <div className="flex-1 p-8 bg-background-light dark:bg-background-dark">
@@ -71,10 +77,47 @@ const ProjectMembers = ({ data, isLoading }: any) => {
                       <td className="px-6 py-4 text-sm text-[#678383]">
                         {formatDate(member.joinedAt)}
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <button className="material-symbols-outlined text-[#678383] hover:text-primary transition-colors">
+                      <td className="px-6 py-4 text-right dropdown dropdown-end">
+                        <button
+                          tabIndex={0}
+                          className="material-symbols-outlined text-[#678383] hover:text-primary transition-colors"
+                        >
                           <EllipsisVertical />
                         </button>
+
+                        <div
+                          tabIndex={-1}
+                          className="absolute dropdown-content right-6 top-10 w-56 bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-[#dde4e4] dark:border-zinc-800 z-50 py-1 overflow-hidden"
+                        >
+                          <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#121717] dark:text-zinc-200 hover:bg-background-light dark:hover:bg-zinc-800 transition-colors">
+                            <span className="material-symbols-outlined text-[18px] text-[#678383]">
+                              <Settings />
+                            </span>
+                            <span className="font-semibold">
+                              Edit Permissions
+                            </span>
+                          </button>
+                          <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#121717] dark:text-zinc-200 hover:bg-background-light dark:hover:bg-zinc-800 transition-colors">
+                            <span className="material-symbols-outlined text-[18px] text-[#678383]">
+                              <ArrowLeftRight />
+                            </span>
+                            <span className="font-semibold">
+                              Transfer Ownership
+                            </span>
+                          </button>
+                          <div className="h-px bg-[#dde4e4] dark:bg-zinc-800 my-1 mx-2"></div>
+                          <button
+                            onClick={() => onRemove(member.user.email)}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">
+                              <Trash2 />
+                            </span>
+                            <span className="font-bold">
+                              Remove from Project
+                            </span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

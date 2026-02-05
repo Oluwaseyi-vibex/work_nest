@@ -28,3 +28,14 @@ export interface TasksType {
   status: string;
   title: string;
 }
+
+export interface Message {
+  id: string;
+  content: string;
+  projectId: string;
+  senderId: string;
+  createdAt: Date;
+  sender: {
+    name: string;
+  };
+}

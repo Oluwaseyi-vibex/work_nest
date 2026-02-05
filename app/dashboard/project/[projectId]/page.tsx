@@ -27,12 +27,14 @@ import ProjectMembers from "@/components/project/ProjectMembers";
 import {
   addProjectMembers,
   fetchProjectMembers,
+  removeProjectMembers,
 } from "@/services/project.service";
 import AddProjectMemberModal from "@/components/project/AddProjectModal";
+import ChatPanel from "@/components/project/ChatPanel";
 
 export default function ProjectsPage() {
   const [showTaskModal, setShowTaskModal] = useState(false);
-  const [showProjectMemberModal, setShowProjectMemberModal] = useState(true);
+  const [showProjectMemberModal, setShowProjectMemberModal] = useState(false);
   const [currentPath, setCurrentPath] = useState("tasks");
   const queryClient = useQueryClient();
   const params = useParams();
@@ -71,11 +73,26 @@ export default function ProjectsPage() {
     },
   });
 
-  const { mutate: membersMutation, isPending: addMemberLoading } = useMutation({
-    mutationFn: addProjectMembers,
-    onSuccess: () => {
-      setShowProjectMemberModal(false);
-      toast.success("Member added!");
+  const {
+    mutate: membersMutation,
+    isPending: addMemberLoading,
+    variables,
+  } = useMutation({
+    mutationFn: async (data: {
+      projectId: string;
+      userEmail: string;
+      type: "add" | "remove";
+    }) => {
+      const payload = { projectId: data.projectId, userEmail: data.userEmail };
+      return data.type === "add"
+        ? addProjectMembers(payload)
+        : removeProjectMembers(payload);
+    },
+    onSuccess: (_, data) => {
+      if (data.type === "add") {
+        setShowProjectMemberModal(false);
+      }
+      toast.success(`Successfully ${data.type}ed member`);
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to add member");
@@ -97,7 +114,10 @@ export default function ProjectsPage() {
     mutation.mutate({ ...data, projectId });
   };
   const addMemberHandler = (data: { email: string }) => {
-    membersMutation({ userEmail: data.email, projectId });
+    membersMutation({ userEmail: data.email, projectId, type: "add" });
+  };
+  const removeMemberHandler = (email: string) => {
+    membersMutation({ userEmail: email, projectId, type: "remove" });
   };
 
   return todosLoading ? (
@@ -166,15 +186,15 @@ export default function ProjectsPage() {
                   </span>
                   Tasks
                 </button>
-                <a
-                  className="flex items-center justify-center border-b-2 border-transparent text-[#678383] pb-3 px-1 font-bold text-sm hover:text-primary2 transition-colors"
-                  href="#"
+                <button
+                  onClick={() => setCurrentPath("messages")}
+                  className={` ${currentPath === "messages" && "border-primary2 text-primary2 border-b-2"} flex cursor-pointer items-center justify-center pb-3 px-1 font-bold text-sm hover:text-primary2 text-[#678383] transition-colors`}
                 >
                   <span className="material-symbols-outlined text-[20px] mr-2">
                     <MessagesSquare />
                   </span>
                   Messages
-                </a>
+                </button>
                 <a
                   className="flex items-center justify-center border-b-2 border-transparent text-[#678383] pb-3 px-1 font-bold text-sm hover:text-primary2 transition-colors"
                   href="#"
@@ -347,8 +367,11 @@ export default function ProjectsPage() {
               <ProjectMembers
                 data={members?.data?.projectMembers}
                 isLoading={membersLoading}
+                onRemove={removeMemberHandler}
+                type={variables?.type}
               />
             )}
+            {currentPath === "messages" && <ChatPanel projectId={projectId} />}
           </div>
         </main>
       </div>

@@ -20,6 +20,9 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       socket.on("connect", () => {
         console.log("✅ Real-time connection established");
       });
+      socket.on("disconnect", () => {
+        console.log("❌ connection disconnected");
+      });
 
       // 2. Global Listener: Project Invites
       socket.on("invited_to_project", (data) => {

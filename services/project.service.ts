@@ -10,11 +10,16 @@ export const fetchProjectMembers = async (id: string) => {
   return response.data;
 };
 
-interface AddMembersPayload {
+interface ProjectMemberPayload {
   projectId: string;
   userEmail: string;
 }
-export const addProjectMembers = async (payload: AddMembersPayload) => {
+export const addProjectMembers = async (payload: ProjectMemberPayload) => {
   const response = await axiosInstance.post(`/project/add-member`, payload);
+  return response.data;
+};
+
+export const removeProjectMembers = async (payload: ProjectMemberPayload) => {
+  const response = await axiosInstance.post(`/project/remove-member`, payload);
   return response.data;
 };
