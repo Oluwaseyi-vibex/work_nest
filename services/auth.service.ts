@@ -25,13 +25,7 @@ export const loginUser = async (payload: LoginPayload) => {
   return response.data;
 };
 
-export const useMe = () =>
-  useQuery({
-    queryKey: ["me"],
-    queryFn: () => {
-      const user = localStorage.getItem("user");
-      if (!user) throw new Error("Not logged in");
-      return JSON.parse(user);
-    },
-    staleTime: Infinity,
-  });
+export const getMe = async () => {
+  const response = await axiosInstance.get("/user/me");
+  return response.data;
+};
