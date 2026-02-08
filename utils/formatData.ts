@@ -22,6 +22,11 @@ export const getMessageDateLabel = (dateString: string) => {
   const date = new Date(dateString);
   const now = new Date();
 
+  // Handle invalid dates
+  if (isNaN(date.getTime())) {
+    return "Invalid date";
+  }
+
   // Reset times to compare only dates
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterday = new Date(today);

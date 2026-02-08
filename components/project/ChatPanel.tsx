@@ -8,24 +8,51 @@ import ChatMessage from "./ChatMessage";
 import { formatTime, groupMessagesByDate } from "@/utils/formatData";
 import { Message } from "@/types";
 import { toast } from "react-toastify";
+import {
+  deleteFile,
+  fetchFileHistory,
+  uploadChatFile,
+} from "@/services/file.service";
 
 export default function ChatPanel({ projectId }: { projectId: string }) {
   const { register, handleSubmit, reset } = useForm();
   const messagesRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollbottom = () => {
     messagesRef.current?.scrollIntoView({ behavior: "instant" });
   };
 
-  // 1. Fetch History
+  // 1. Fetch Message History
   const { data: messages, isLoading } = useQuery({
     queryKey: ["chat-history", projectId],
     queryFn: () => fetchChatHistory(projectId),
   });
+  // 1. Fetch File History
+  const { data: projectFiles, isLoading: filesIsLoading } = useQuery({
+    queryKey: ["file-history", projectId],
+    queryFn: () => fetchFileHistory(projectId),
+  });
 
-  const groupMessages = useMemo(() => {
-    return groupMessagesByDate(messages?.data || []);
-  }, [messages?.data]);
+  // Inside your ChatPanel component
+  const unifiedFeed = useMemo(() => {
+    const msgList = messages?.data || [];
+    const fileList = projectFiles?.data || [];
+
+    const combined = [
+      ...msgList.map((m: any) => ({ ...m, feedType: "TEXT" })),
+      ...fileList.map((f: any) => ({ ...f, feedType: "FILE" })),
+    ];
+
+    // Sort by the 'createdAt' timestamp from your DB
+    const sorted = combined.sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+
+    // Group the sorted list by date using your existing utility
+    return groupMessagesByDate(sorted);
+  }, [messages?.data, projectFiles?.data]);
 
   // 2. Real-time Listener
   useChatSocket(projectId);
@@ -34,6 +61,31 @@ export default function ChatPanel({ projectId }: { projectId: string }) {
   const mutation = useMutation({
     mutationFn: sendMessage,
   });
+
+  const fileMutation = useMutation({
+    mutationFn: ({ file }: { file: File }) =>
+      uploadChatFile({ projectId, file }),
+    onSuccess: () => {
+      toast.success("File shared!");
+    },
+  });
+  const deleteFileMutation = useMutation({
+    mutationFn: (fileId: string) => deleteFile(fileId),
+    onSuccess: () => {
+      toast.success("File deleted!");
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message);
+    },
+  });
+
+  const onFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (file) {
+      fileMutation.mutate({ file });
+    }
+  };
 
   const onSend = (data: any) => {
     if (!data.content.trim()) return;
@@ -46,6 +98,12 @@ export default function ChatPanel({ projectId }: { projectId: string }) {
       },
     );
   };
+
+  const handlePaperclipClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  console.log(unifiedFeed);
 
   useEffect(() => {
     scrollbottom();
@@ -156,24 +214,34 @@ export default function ChatPanel({ projectId }: { projectId: string }) {
           </div>
         </div>
         {messages &&
-          Object.keys(groupMessages).map((dateLabel, index) => (
-            <div key={index}>
+          projectFiles &&
+          Object.entries(unifiedFeed).map(([date, items]: any) => (
+            <div key={date}>
               <div className="relative flex items-center py-4">
                 <div className="grow border-t border-[#dde4e4] dark:border-gray-800"></div>
                 <span className="shrink mx-4 text-[10px] font-bold uppercase tracking-widest text-[#678383]">
-                  {dateLabel}
+                  {date}
                 </span>
                 <div className="grow border-t border-[#dde4e4] dark:border-gray-800"></div>
               </div>
-              {groupMessages[dateLabel].map((msg: Message) => (
-                <ChatMessage
-                  name={msg.sender.name}
-                  content={msg.content}
-                  time={formatTime(msg.createdAt)}
-                  id={msg.senderId}
-                />
+              {items?.map((msg: any) => (
+                <div key={msg.id}>
+                  <ChatMessage
+                    name={
+                      msg?.feedType == "TEXT"
+                        ? msg?.sender?.name
+                        : msg?.uploader?.name
+                    }
+                    content={msg.content}
+                    time={formatTime(msg.createdAt)}
+                    id={msg?.feedType == "TEXT" ? msg.senderId : msg.uploaderId}
+                    feedType={msg.feedType}
+                    url={msg.url}
+                    onDelete={() => deleteFileMutation.mutate(msg.id)}
+                  />
+                  <div ref={messagesRef}></div>
+                </div>
               ))}
-              <div ref={messagesRef}></div>
             </div>
           ))}
 
@@ -257,11 +325,20 @@ export default function ChatPanel({ projectId }: { projectId: string }) {
                   </span>
                 </button> */}
                 <div className="w-px h-6 bg-[#dde4e4] dark:bg-gray-700 mx-1"></div>
-                <button className="p-1.5 text-gray-500 hover:text-primary2 hover:bg-[#f1f4f4] dark:hover:bg-gray-700 rounded-lg transition-colors">
+                <button
+                  onClick={handlePaperclipClick}
+                  className="p-1.5 text-gray-500 hover:text-primary2 hover:bg-[#f1f4f4] dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
                   <span className="material-symbols-outlined text-xl">
                     <Paperclip />
                   </span>
                 </button>
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={onFileSelect}
+                  ref={fileInputRef}
+                />
                 {/* <button className="p-1.5 text-gray-500 hover:text-primary2 hover:bg-[#f1f4f4] dark:hover:bg-gray-700 rounded-lg transition-colors">
                   <span className="material-symbols-outlined text-xl">
                     mood

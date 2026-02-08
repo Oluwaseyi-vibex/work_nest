@@ -29,8 +29,46 @@ export function useChatSocket(projectId: string) {
       });
     });
 
+    socket.on("new_file", (newMessage) => {
+      queryClient.setQueryData(["chat-history", projectId], (oldData: any) => {
+        // 1. Handle empty cache
+        if (!oldData) return { success: true, data: [newMessage] };
+
+        // 2. Prevent Duplicate Messages
+        // Sometimes Sockets and HTTP overlap; this check prevents the message appearing twice
+        const exists = oldData.data?.some((m: any) => m.id === newMessage.id);
+        if (exists) return oldData;
+
+        // 3. Append and return
+        return {
+          ...oldData,
+          data: [...(oldData.data || []), newMessage],
+        };
+      });
+    });
+
+    socket.on("file_deleted", (newMessage) => {
+      queryClient.setQueryData(["chat-history", projectId], (oldData: any) => {
+        // 1. Handle empty cache
+        if (!oldData) return { success: true, data: [newMessage] };
+
+        // 2. Prevent Duplicate Messages
+        // Sometimes Sockets and HTTP overlap; this check prevents the message appearing twice
+        const exists = oldData.data?.some((m: any) => m.id === newMessage.id);
+        if (exists) return oldData;
+
+        // 3. Append and return
+        return {
+          ...oldData,
+          data: [...(oldData.data || []), newMessage],
+        };
+      });
+    });
+
     return () => {
       socket.off("new_message");
+      socket.off("new_file");
+      socket.off("file_deleted");
     };
   }, [projectId, queryClient]);
 }
