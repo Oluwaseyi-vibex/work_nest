@@ -39,3 +39,8 @@ export interface Message {
     name: string;
   };
 }
+
+export interface UpdateTaskStatusPayload {
+  taskId: string;
+  status: string;
+}

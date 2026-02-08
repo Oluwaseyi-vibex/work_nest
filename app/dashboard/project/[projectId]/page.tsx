@@ -3,9 +3,14 @@ import { useState } from "react";
 import TaskSkeleton from "@/components/skeleton/TaskSkeleton";
 import AddTaskModal from "@/components/task/AddTaskModal";
 import TaskCard from "@/components/task/TaskCard";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useProjectSocket } from "@/hooks/useProjectSocket";
-import { createTask, fetchMyProjectsTask } from "@/services/task.service";
-import { TasksType } from "@/types";
+import {
+  createTask,
+  fetchMyProjectsTask,
+  updateTaskStatus,
+} from "@/services/task.service";
+import { TasksType, UpdateTaskStatusPayload } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BadgeCheck,
@@ -73,6 +78,15 @@ export default function ProjectsPage() {
     },
   });
 
+  const updateTaskMutation = useMutation({
+    mutationFn: async (payload: UpdateTaskStatusPayload) => {
+      updateTaskStatus(payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project-todos", projectId] });
+    },
+  });
+
   const {
     mutate: membersMutation,
     isPending: addMemberLoading,
@@ -109,6 +123,18 @@ export default function ProjectsPage() {
     (task: TasksType) => task.status === "done",
   );
   // console.log(todosData);
+
+  const onDragEnd = (result: any) => {
+    const { destination, source, draggableId } = result;
+    if (!destination) return;
+    console.log(destination.droppableId, source.droppableId);
+    if (destination.droppableId === source.droppableId) return;
+
+    updateTaskMutation.mutate({
+      taskId: draggableId,
+      status: destination.droppableId,
+    });
+  };
 
   const addNewTaskHandler = (data: { title: string; description: string }) => {
     mutation.mutate({ ...data, projectId });
@@ -217,28 +243,55 @@ export default function ProjectsPage() {
             </div>
             {/* <!-- Kanban Board Section --> */}
             {currentPath === "tasks" && (
-              <div className="flex-1 p-8  overflow-x-auto custom-scrollbar flex gap-6 bg-background-light dark:bg-background-dark">
-                {/* <!-- Todo Column --> */}
-                <div className="kanban-column flex flex-col gap-4">
-                  <div className="flex items-center justify-between px-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-black text-sm uppercase tracking-widest text-[#678383]">
-                        To Do
-                      </h3>
-                      <span className="bg-[#dde4e4] dark:bg-zinc-800 text-[#121717] dark:text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                        {todosData.length}
-                      </span>
+              <DragDropContext onDragEnd={onDragEnd}>
+                <div className="flex-1 p-8 overflow-x-auto overflow-y-visible custom-scrollbar flex gap-6 bg-background-light dark:bg-background-dark">
+                  {/* <!-- Todo Column --> */}
+                  <div className="kanban-column flex flex-col gap-4">
+                    <div className="flex items-center justify-between px-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-black text-sm uppercase tracking-widest text-[#678383]">
+                          To Do
+                        </h3>
+                        <span className="bg-[#dde4e4] dark:bg-zinc-800 text-[#121717] dark:text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                          {todosData.length}
+                        </span>
+                      </div>
+                      <button className="material-symbols-outlined text-[#678383] hover:text-primary2">
+                        <CopyPlus />
+                      </button>
                     </div>
-                    <button className="material-symbols-outlined text-[#678383] hover:text-primary2">
-                      <CopyPlus />
-                    </button>
-                  </div>
-                  {/* <!-- Task Card 1 --> */}
-                  {todosData?.map((task: TasksType) => (
-                    <TaskCard title={task.title} key={task.id} />
-                  ))}
-                  {/* <!-- Task Card 2 --> */}
-                  {/* <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl border border-[#dde4e4] dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow group">
+                    {/* <!-- Task Card 1 --> */}
+                    <Droppable droppableId="todo">
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className="flex flex-col gap-4"
+                        >
+                          {todosData?.map((task: TasksType, index: number) => (
+                            <Draggable
+                              key={task.id}
+                              draggableId={task.id}
+                              index={index}
+                            >
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className={`${snapshot.isDragging ? "opacity-50" : "opacity-100"}`}
+                                >
+                                  <TaskCard title={task.title} key={task.id} />
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                    {/* <!-- Task Card 2 --> */}
+                    {/* <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl border border-[#dde4e4] dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow group">
                   <div className="flex justify-between items-start mb-3">
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 uppercase tracking-tight">
                       High
@@ -267,33 +320,64 @@ export default function ProjectsPage() {
                     ></div>
                   </div>
                 </div> */}
-                  {/* <!-- Quick Add Task --> */}
-                  {/* <button className="flex items-center justify-center p-4 border-2 border-dashed border-[#dde4e4] dark:border-zinc-800 rounded-xl text-[#678383] hover:border-primary2/40 hover:text-primary2 transition-all group">
+                    {/* <!-- Quick Add Task --> */}
+                    {/* <button className="flex items-center justify-center p-4 border-2 border-dashed border-[#dde4e4] dark:border-zinc-800 rounded-xl text-[#678383] hover:border-primary2/40 hover:text-primary2 transition-all group">
                   <span className="material-symbols-outlined mr-2">add</span>
                   <span className="text-sm font-bold">Add another card</span>
                 </button> */}
-                </div>
-                {/* <!-- In Progress Column --> */}
-                <div className="kanban-column flex flex-col gap-4">
-                  <div className="flex items-center justify-between px-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-black text-sm uppercase tracking-widest text-[#678383]">
-                        In Progress
-                      </h3>
-                      <span className="bg-primary2/10 text-primary2 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                        {inProgressData?.length}
-                      </span>
-                    </div>
-                    <button className="material-symbols-outlined text-[#678383] hover:text-primary2">
-                      <CopyPlus />
-                    </button>
                   </div>
-                  {/* <!-- Task Card 3 --> */}
-                  {inProgressData?.map((task: TasksType) => (
-                    <TaskCard title={task.title} key={task.id} />
-                  ))}
-                  {/* <!-- Task Card 4 --> */}
-                  {/* <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl border border-[#dde4e4] dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow group">
+                  {/* <!-- In Progress Column --> */}
+                  <div className="kanban-column flex flex-col gap-4">
+                    <div className="flex items-center justify-between px-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-black text-sm uppercase tracking-widest text-[#678383]">
+                          In Progress
+                        </h3>
+                        <span className="bg-primary2/10 text-primary2 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                          {inProgressData?.length}
+                        </span>
+                      </div>
+                      <button className="material-symbols-outlined text-[#678383] hover:text-primary2">
+                        <CopyPlus />
+                      </button>
+                    </div>
+                    {/* <!-- Task Card 3 --> */}
+                    <Droppable droppableId="in_progress">
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className="flex flex-col gap-4 min-h-25"
+                        >
+                          {inProgressData?.map(
+                            (task: TasksType, index: number) => (
+                              <Draggable
+                                key={task.id}
+                                draggableId={task.id}
+                                index={index}
+                              >
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className={`${snapshot.isDragging ? "opacity-50" : "opacity-100"}`}
+                                  >
+                                    <TaskCard
+                                      title={task.title}
+                                      key={task.id}
+                                    />
+                                  </div>
+                                )}
+                              </Draggable>
+                            ),
+                          )}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                    {/* <!-- Task Card 4 --> */}
+                    {/* <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl border border-[#dde4e4] dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow group">
                   <div className="flex justify-between items-start mb-3">
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 uppercase tracking-tight">
                       Medium
@@ -322,29 +406,56 @@ export default function ProjectsPage() {
                     ></div>
                   </div>
                 </div> */}
-                </div>
-                {/* <!-- Done Column --> */}
-                <div className="kanban-column flex flex-col gap-4">
-                  <div className="flex items-center justify-between px-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-black text-sm uppercase tracking-widest text-[#678383]">
-                        Done
-                      </h3>
-                      <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                        {doneData.length}
-                      </span>
-                    </div>
-                    <button className="material-symbols-outlined text-[#678383] hover:text-primary2">
-                      <CopyPlus />
-                    </button>
                   </div>
-                  {/* <!-- Task Card 5 --> */}
-                  {doneData.map((task: TasksType) => (
-                    <TaskCard title={task.title} key={task.id} />
-                  ))}
-                </div>
-                {/* <!-- Add New Column --> */}
-                {/* <div className="kanban-column flex flex-col gap-4">
+                  {/* <!-- Done Column --> */}
+                  <div className="kanban-column flex flex-col gap-4">
+                    <div className="flex items-center justify-between px-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-black text-sm uppercase tracking-widest text-[#678383]">
+                          Done
+                        </h3>
+                        <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                          {doneData.length}
+                        </span>
+                      </div>
+                      <button className="material-symbols-outlined text-[#678383] hover:text-primary2">
+                        <CopyPlus />
+                      </button>
+                    </div>
+                    {/* <!-- Task Card 5 --> */}
+                    <Droppable droppableId="done">
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className="flex flex-col gap-4 min-h-25"
+                        >
+                          {doneData?.map((task: TasksType, index: number) => (
+                            <Draggable
+                              key={task.id}
+                              draggableId={task.id}
+                              index={index}
+                            >
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className={`${snapshot.isDragging ? "opacity-50" : "opacity-100"}`}
+                                >
+                                  <TaskCard title={task.title} key={task.id} />
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </div>
+
+                  {/* <!-- Add New Column --> */}
+                  {/* <div className="kanban-column flex flex-col gap-4">
                 <div className="flex items-center px-1 mb-2">
                   <h3 className="font-black text-sm uppercase tracking-widest text-[#678383] opacity-50">
                     Add Column
@@ -361,7 +472,8 @@ export default function ProjectsPage() {
                   </div>
                 </div>
               </div> */}
-              </div>
+                </div>
+              </DragDropContext>
             )}
             {currentPath === "members" && (
               <ProjectMembers

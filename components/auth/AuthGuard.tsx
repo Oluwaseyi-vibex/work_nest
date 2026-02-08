@@ -6,11 +6,13 @@ import { useUser } from "@/hooks/useUser";
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useUser();
+  const logout = useAuthStore((state) => state.logOut);
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/login");
+      logout();
+      // router.push("/login");
     }
   }, [user, isLoading, router]);
 
