@@ -44,3 +44,16 @@ export interface UpdateTaskStatusPayload {
   taskId: string;
   status: string;
 }
+
+export interface GetFileHistorry {
+  id: string;
+  name: string;
+  url: string;
+  size: number;
+  projectId: string;
+  uploaderId: string;
+  createdAt: string;
+  uploader: {
+    name: string;
+  };
+}

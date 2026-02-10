@@ -55,7 +55,7 @@ const ChatMessage = ({
             {url.match(/\.(jpeg|jpg|gif|png)$/i) ? (
               <Image
                 src={url}
-                alt={name}
+                alt={name || "image"}
                 width={500}
                 height={500}
                 className="rounded-xl border border-[#dde4e4] dark:border-gray-800 max-w-[440px] cursor-pointer hover:shadow-md transition-all"

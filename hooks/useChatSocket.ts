@@ -29,38 +29,38 @@ export function useChatSocket(projectId: string) {
       });
     });
 
-    socket.on("new_file", (newMessage) => {
-      queryClient.setQueryData(["chat-history", projectId], (oldData: any) => {
+    socket.on("new_file", (newFile) => {
+      queryClient.setQueryData(["file-history", projectId], (oldData: any) => {
         // 1. Handle empty cache
-        if (!oldData) return { success: true, data: [newMessage] };
+        if (!oldData) return { success: true, data: [newFile] };
 
         // 2. Prevent Duplicate Messages
         // Sometimes Sockets and HTTP overlap; this check prevents the message appearing twice
-        const exists = oldData.data?.some((m: any) => m.id === newMessage.id);
+        const exists = oldData.data?.some((m: any) => m.id === newFile.id);
         if (exists) return oldData;
 
         // 3. Append and return
         return {
           ...oldData,
-          data: [...(oldData.data || []), newMessage],
+          data: [...(oldData.data || []), newFile],
         };
       });
     });
 
-    socket.on("file_deleted", (newMessage) => {
-      queryClient.setQueryData(["chat-history", projectId], (oldData: any) => {
+    socket.on("file_deleted", (newFile) => {
+      queryClient.setQueryData(["file-history", projectId], (oldData: any) => {
         // 1. Handle empty cache
-        if (!oldData) return { success: true, data: [newMessage] };
+        if (!oldData) return { success: true, data: [newFile] };
 
         // 2. Prevent Duplicate Messages
         // Sometimes Sockets and HTTP overlap; this check prevents the message appearing twice
-        const exists = oldData.data?.some((m: any) => m.id === newMessage.id);
+        const exists = oldData.data?.some((m: any) => m.id === newFile.id);
         if (exists) return oldData;
 
         // 3. Append and return
         return {
           ...oldData,
-          data: [...(oldData.data || []), newMessage],
+          data: [...(oldData.data || []), newFile],
         };
       });
     });

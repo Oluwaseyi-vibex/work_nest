@@ -3,6 +3,7 @@ import { useState } from "react";
 import TaskSkeleton from "@/components/skeleton/TaskSkeleton";
 import AddTaskModal from "@/components/task/AddTaskModal";
 import TaskCard from "@/components/task/TaskCard";
+import FilesView from "@/components/file/Files";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useProjectSocket } from "@/hooks/useProjectSocket";
 import {
@@ -45,7 +46,7 @@ export default function ProjectsPage() {
   const params = useParams();
   const projectId = params.projectId as string;
 
-  useProjectSocket(projectId as string);
+  useProjectSocket(projectId);
 
   const {
     data: todos,
@@ -221,15 +222,15 @@ export default function ProjectsPage() {
                   </span>
                   Messages
                 </button>
-                <a
-                  className="flex items-center justify-center border-b-2 border-transparent text-[#678383] pb-3 px-1 font-bold text-sm hover:text-primary2 transition-colors"
-                  href="#"
+                <button
+                  onClick={() => setCurrentPath("files")}
+                  className={` ${currentPath === "files" && "border-primary2 text-primary2 border-b-2"} flex cursor-pointer items-center justify-center pb-3 px-1 font-bold text-sm hover:text-primary2 text-[#678383] transition-colors`}
                 >
                   <span className="material-symbols-outlined text-[20px] mr-2">
                     <Folder />
                   </span>
                   Files
-                </a>
+                </button>
                 <button
                   onClick={() => setCurrentPath("members")}
                   className={` ${currentPath === "members" && "border-primary2 text-primary2 border-b-2"} flex cursor-pointer items-center justify-center pb-3 px-1 font-bold text-sm hover:text-primary2 text-[#678383] transition-colors`}
@@ -484,6 +485,7 @@ export default function ProjectsPage() {
               />
             )}
             {currentPath === "messages" && <ChatPanel projectId={projectId} />}
+            {currentPath === "files" && <FilesView projectId={projectId} />}
           </div>
         </main>
       </div>

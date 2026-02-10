@@ -224,8 +224,8 @@ export default function ChatPanel({ projectId }: { projectId: string }) {
                 </span>
                 <div className="grow border-t border-[#dde4e4] dark:border-gray-800"></div>
               </div>
-              {items?.map((msg: any) => (
-                <div key={msg.id}>
+              {items?.map((msg: any, index: number) => (
+                <div key={index}>
                   <ChatMessage
                     name={
                       msg?.feedType == "TEXT"
@@ -236,7 +236,7 @@ export default function ChatPanel({ projectId }: { projectId: string }) {
                     time={formatTime(msg.createdAt)}
                     id={msg?.feedType == "TEXT" ? msg.senderId : msg.uploaderId}
                     feedType={msg.feedType}
-                    url={msg.url}
+                    url={msg?.url}
                     onDelete={() => deleteFileMutation.mutate(msg.id)}
                   />
                   <div ref={messagesRef}></div>
