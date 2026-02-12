@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
-import { getMe } from "@/services/auth.service";
 import { useUser } from "@/hooks/useUser";
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {

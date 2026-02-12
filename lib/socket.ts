@@ -3,6 +3,7 @@ import { env } from "./env";
 
 const socket = io(env.NEXT_PUBLIC_SOCKET_URL, {
   autoConnect: false,
+  transports: ["websocket", "polling"],
   // Using 'query' because your backend expects it in the URL string
   query: {},
 });

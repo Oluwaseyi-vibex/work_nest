@@ -6,6 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Eye, FileText, FileVideoCamera, Image, Trash } from "lucide-react";
 import { toast } from "react-toastify";
 import Loader from "../Loader";
+import UserAvatar from "./../UserAvater";
 
 const file = ({ projectId }: { projectId: string }) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -78,14 +79,7 @@ const file = ({ projectId }: { projectId: string }) => {
                 <td className="px-6 py-4 text-sm text-[#678383]">Image</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <div
-                      className="size-6 rounded-full bg-center bg-cover"
-                      data-alt="Avatar of Sarah Jenkins"
-                      style={{
-                        backgroundImage:
-                          "url(https://lh3.googleusercontent.com/aida-public/AB6AXuBC6aFbrxa1RA2JUzXMuaD7EyBNpRYYELmPNkdMFQqbaNhpO1TZC9kqpOEtDzX4NoSMqkKWMJQFjypFAAiiyWSexut3-UBCc_YzI0YxD5Pr5UyyQpYlk4-QQVBlbcvjnRKJK-Ru8c6bTBiWMlQn50pWq57vT-6mVa63QManOoWXwmnuskiULw_8tICLCNqoKFd9jiukp89ub4RXxk6LnWueHaw3T0wp18k29eMiwPhb4ZeTBfF7iPNLfH4E396RJaoSLMn1EcnwNBYF)",
-                      }}
-                    ></div>
+                    <UserAvatar />
                     <span className="text-sm font-medium text-[#121717] dark:text-white">
                       {file?.uploader?.name}
                     </span>
@@ -108,6 +102,7 @@ const file = ({ projectId }: { projectId: string }) => {
                       </span>
                     </button>
                     <button
+                      disabled={deleteLoading}
                       onClick={() => deleteFileMutation.mutate(file.id)}
                       className="p-2 text-[#678383] hover:text-red-500 transition-colors"
                     >

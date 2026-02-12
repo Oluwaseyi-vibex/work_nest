@@ -9,6 +9,7 @@ import React from "react";
 import Loader from "../Loader";
 import { formatDate } from "@/utils/formatData";
 import { useForm } from "react-hook-form";
+import UserAvatar from "./../UserAvater";
 
 const ProjectMembers = ({ data, isLoading, onRemove, type }: any) => {
   return (
@@ -40,20 +41,14 @@ const ProjectMembers = ({ data, isLoading, onRemove, type }: any) => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#dde4e4] dark:divide-zinc-800">
-                  {data.map((member) => (
+                  {data.map((member: any) => (
                     <tr
                       className="hover:bg-background-light dark:hover:bg-zinc-900/50 transition-colors"
                       key={member.id}
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div
-                            className="size-10 rounded-full bg-cover bg-center ring-2 ring-background-light dark:ring-zinc-800"
-                            style={{
-                              backgroundImage:
-                                "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDhSi2eCLIuz4a4FpcBlydKmPWN9LJfNZkdLEaEwQaZwXma2DkVinLvzoP1ZXT5-NIiC99Od323PcNMmizzq2RNSyCX0LPlbDhYeb3-zihTtaZvhgQQ2udWYJzp67p7RC70qNuMVlPNcCmUXpGvaPy2wSS1ST0QSdVyIEj0T4vBj5KmWBjb_sO8YBVKS4FaTTBU4208nwtAcgxRtC4LjhI-bEIe2iCI3AxfHzLbx1p_JHACgfrS40csjMW4UYEqbbs6w3h6W2BW0zq3')",
-                            }}
-                          ></div>
+                          <UserAvatar />
                           <div>
                             <p className="text-sm font-bold">
                               {member.user.name}

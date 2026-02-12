@@ -24,8 +24,3 @@ export const loginUser = async (payload: LoginPayload) => {
   const response = await axiosInstance.post("/auth/login", payload);
   return response.data;
 };
-
-export const getMe = async () => {
-  const response = await axiosInstance.get("/user/me");
-  return response.data;
-};

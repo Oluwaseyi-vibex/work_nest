@@ -112,7 +112,10 @@ export default function DashboardLayout({
                     <Bell />
                   </span>
                 </button>
-                <button className="p-2 rounded-lg bg-[#f1f4f4] dark:bg-[#2d3238] text-[#121717] dark:text-white">
+                <button
+                  onClick={() => router.push("/dashboard/settings")}
+                  className="p-2 rounded-lg bg-[#f1f4f4] dark:bg-[#2d3238] text-[#121717] dark:text-white"
+                >
                   <span className="material-symbols-outlined text-xl">
                     <Settings />
                   </span>

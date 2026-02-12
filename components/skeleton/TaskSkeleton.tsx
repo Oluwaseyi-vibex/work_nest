@@ -44,6 +44,13 @@ const TaskSkeleton = () => {
                     <div className="material-symbols-outlined text-[20px] mr-2 skeleton h-5 w-5 rounded-full"></div>
                     <p className="skeleton h-5 w-11"> </p>
                   </a>
+                  <a
+                    className="flex items-center justify-center text-primary2 pb-3 px-1 font-bold text-sm"
+                    href="#"
+                  >
+                    <div className="material-symbols-outlined text-[20px] mr-2 skeleton h-5 w-5 rounded-full"></div>
+                    <p className="skeleton h-5 w-11"> </p>
+                  </a>
                 </div>
               </div>
               {/* <!-- Kanban Board Section --> */}
