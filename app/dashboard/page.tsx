@@ -1,7 +1,28 @@
-import ProjectCard from "@/components/ProjectCard";
-import { ArrowDown, LayoutGrid, List, Plus, Search } from "lucide-react";
+"use client";
+import { useEffect } from "react";
+import ProjectCard from "@/components/project/ProjectCard";
+import {
+  ArrowDown,
+  LayoutGrid,
+  List,
+  Loader2,
+  Plus,
+  Search,
+} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchMyProjects } from "@/services/project.service";
+import { ProjectsType } from "@/types";
+import Link from "next/link";
 
 export default function DashboardPage() {
+  const {
+    data: projects,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["projects"],
+    queryFn: fetchMyProjects,
+  });
   return (
     <>
       {/* <!-- Page Heading --> */}
@@ -62,29 +83,54 @@ export default function DashboardPage() {
         </div>
       </div>
       {/* <!-- Project Grid --> */}
+      {isLoading && (
+        <div className="flex justify-center p-4">
+          <span className="loading loading-ring loading-xl"></span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* <!-- Project Card 2 --> */}
-        <ProjectCard />
 
-        {/* <!-- New Project Placeholder Card --> */}
-        <button className="group border-2 border-dashed border-[#f1f4f4] dark:border-[#2d3238] rounded-xl flex flex-col items-center justify-center p-6 hover:border-primary2/50 hover:bg-white dark:hover:bg-background-dark transition-all duration-300">
-          <div className="w-12 h-12 rounded-full bg-[#f1f4f4] dark:bg-[#2d3238] flex items-center justify-center text-[#678383] group-hover:bg-primary2/10 group-hover:text-primary2 mb-4 transition-colors">
-            <span className="material-symbols-outlined text-3xl">
-              <Plus />
-            </span>
-          </div>
-          <h3 className="text-base font-bold text-[#678383] group-hover:text-primary2 transition-colors">
-            Create Project
-          </h3>
-          <p className="text-xs text-[#678383] mt-1">Start a new engagement</p>
-        </button>
+        {!isLoading &&
+          projects?.data?.map((project: ProjectsType) => (
+            <ProjectCard
+              id={project.project.id}
+              name={project.project.name}
+              description={
+                project.project.description
+                  ? project.project.description
+                  : "Give this project a description. what do you think?"
+              }
+              key={project.project.id}
+            />
+          ))}
+
+        {!isLoading && projects?.data && (
+          <button className="group border-2 border-dashed border-[#f1f4f4] dark:border-[#2d3238] rounded-xl flex flex-col items-center justify-center p-6 hover:border-primary2/50 hover:bg-white dark:hover:bg-background-dark transition-all duration-300">
+            <div className="w-12 h-12 rounded-full bg-[#f1f4f4] dark:bg-[#2d3238] flex items-center justify-center text-[#678383] group-hover:bg-primary2/10 group-hover:text-primary2 mb-4 transition-colors">
+              <span className="material-symbols-outlined text-3xl">
+                <Plus />
+              </span>
+            </div>
+            <h3 className="text-base font-bold text-[#678383] group-hover:text-primary2 transition-colors">
+              Create Project
+            </h3>
+            <p className="text-xs text-[#678383] mt-1">
+              Start a new engagement
+            </p>
+          </button>
+        )}
       </div>
+
       {/* <!-- Pagination/Load More --> */}
-      <div className="mt-12 flex items-center justify-center">
-        <button className="px-8 py-3 bg-white dark:bg-background-dark border border-[#f1f4f4] dark:border-[#2d3238] rounded-lg text-sm font-bold hover:bg-[#f1f4f4] dark:hover:bg-[#2d3238] transition-colors shadow-soft">
-          Load More Projects
-        </button>
-      </div>
+      {/* {!isLoading && projects?.data && (
+        <div className="mt-12 flex items-center justify-center">
+          <button className="px-8 py-3 bg-white dark:bg-background-dark border border-[#f1f4f4] dark:border-[#2d3238] rounded-lg text-sm font-bold hover:bg-[#f1f4f4] dark:hover:bg-[#2d3238] transition-colors shadow-soft">
+            Load More Projects
+          </button>
+        </div>
+      )} */}
     </>
   );
 }
