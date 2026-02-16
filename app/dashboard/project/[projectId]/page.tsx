@@ -37,6 +37,7 @@ import {
 } from "@/services/project.service";
 import AddProjectMemberModal from "@/components/project/AddProjectModal";
 import ChatPanel from "@/components/project/ChatPanel";
+import ViewProjectModal from "@/components/task/ViewProjectModal";
 
 export default function ProjectsPage() {
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -501,6 +502,7 @@ export default function ProjectsPage() {
         onSubmit={addMemberHandler}
         isLoading={addMemberLoading}
       />
+      <ViewProjectModal />
     </section>
   );
 }

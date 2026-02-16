@@ -1,6 +1,7 @@
 "use client";
 
 import AuthGuard from "@/components/auth/AuthGuard";
+import UserAvatar from "@/components/UserAvater";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -122,14 +123,7 @@ export default function DashboardLayout({
                 </button>
                 <div className="h-8 w-px bg-[#f1f4f4] dark:bg-[#2d3238] mx-2"></div>
                 <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-full bg-center bg-cover border-2 border-primary2/20"
-                    data-alt="User profile avatar portrait"
-                    style={{
-                      backgroundImage:
-                        "url('https://lh3.googleusercontent.com/aida-public/AB6AXuD_XDl7Y0e2eUrlmaJSdccwy6r00J_IgqEtejQlJl4fCHWK81HWddEBLNmlSL0_tP8UHiERdnkch-eAVk-5hIbIm7yVOjFiQzJcHklEefdF8aUtaobTBTxVh7E8kZqZGrYROkylDrpzKemIh7F1fffJvHnePGTaHjeHDW_NwtIWUKnT2oSZOp6VBFcV5n1UqmD08oUkgo987fYgFYGF1sC7lobnaMH87MsXejmu9gI05BINeuBxBRFmC6ue2kILEkJTsj6GgysNTb0E')",
-                    }}
-                  ></div>
+                  <UserAvatar />
                 </div>
               </div>
             </header>
